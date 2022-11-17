@@ -1,0 +1,40 @@
+version: "3.6"
+
+services:
+  executor-service:
+    image: vi-creator/vi-creator-executor-service:${TAG}
+    container_name: executor-service
+    networks:
+      - vi-network
+    depends_on:
+      - executor-redis
+    links:
+      - executor-redis:executor-redis
+    environment:
+      - PYTHONUNBUFFERED=1
+      - HOST=${HOST}
+      - AUTH_KEY=${AUTH_KEY}
+      - DOCKER_HOST=tcp://host.docker.internal:2375
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    ports:
+      - "5000:5000"
+    volumes:
+      - ${SCRIPT_DIR}:/executor
+    command: ./entrypoint.sh
+
+  executor-redis:
+    image: redis
+    container_name: agora-redis
+    networks:
+      - vi-network
+    expose:
+      - "6379"
+
+networks:
+  vi-network:
+    driver: bridge
+    ipam:
+      driver: default
+      config:
+        - subnet: ${NETWORK_ADDRESS}
